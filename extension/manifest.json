@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "縦読みの部屋 for Substack",
+  "version": "0.1.0",
+  "description": "Substackの記事をワンクリックで縦書きの読書ページに変換します。",
+  "permissions": ["tabs"],
+  "host_permissions": [
+    "https://*.substack.com/*",
+    "https://tategaki-substack-reader.vercel.app/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.substack.com/p/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "縦読みで開く"
+  }
+}
