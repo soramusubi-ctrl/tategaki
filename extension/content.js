@@ -70,23 +70,59 @@
       document.querySelector('meta[property="og:title"]')?.content?.trim() ||
       document.title.replace(/\s*[-|]\s*[^-|]+$/, "").trim() ||
       "無題";
+
     const content = findArticleBody();
     if (!content) throw new Error("Substackの記事本文を見つけられませんでした");
+
     const clone = content.cloneNode(true);
     clone.querySelectorAll([
       "script", "style", "button", "form", "nav", "aside", "footer",
       "[role='button']", "[data-testid*='subscribe']", "[class*='subscribe']",
       "[class*='paywall']", "[class*='share']", "[class*='comment']"
     ].join(",")).forEach((node) => node.remove());
+
     return {
       title,
-      body: normalizeText(clone.innerText || clone.textContent || ""),
+      body: extractStructuredText(clone),
       source: location.href.split("?")[0].split("#")[0],
       theme: "",
       font: "serif",
       size: "22",
       line: "2.05"
     };
+  }
+
+  function extractStructuredText(root) {
+    const blocks = root.querySelectorAll("p, h2, h3, h4, blockquote, li, pre, figure figcaption");
+    const parts = [];
+
+    for (const block of blocks) {
+      if (isNestedBlock(block)) continue;
+      const text = normalizeInlineText(block.innerText || block.textContent || "");
+      if (!text) continue;
+
+      if (block.matches("li")) {
+        parts.push(`・${text}`);
+      } else if (block.matches("h2, h3, h4")) {
+        parts.push(`\n${text}\n`);
+      } else {
+        parts.push(text);
+      }
+    }
+
+    if (!parts.length) {
+      return normalizeText(root.innerText || root.textContent || "");
+    }
+
+    return parts
+      .join("\n\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+
+  function isNestedBlock(block) {
+    const parentBlock = block.parentElement?.closest("p, h2, h3, h4, blockquote, li, pre, figure figcaption");
+    return Boolean(parentBlock && parentBlock !== block);
   }
 
   function findArticleBody() {
@@ -106,6 +142,15 @@
 
   function textLength(node) {
     return (node.innerText || node.textContent || "").trim().length;
+  }
+
+  function normalizeInlineText(text) {
+    return text
+      .replace(/\r\n?/g, "\n")
+      .replace(/[ \t]+/g, " ")
+      .replace(/ *\n */g, "\n")
+      .replace(/\n{2,}/g, "\n")
+      .trim();
   }
 
   function normalizeText(text) {
