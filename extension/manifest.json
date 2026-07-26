@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "縦読みの部屋 for Substack",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "表示中のSubstack記事を、ワンクリックで縦書きの読書ページに変換します。",
   "host_permissions": [
     "https://tategaki-substack-reader.vercel.app/*"
